@@ -1,0 +1,80 @@
+# Analysis settings. Every value here is a decision documented in docs/analysis_plan.md.
+# After the plan is registered, change a value only after logging it in docs/deviations.md.
+
+seed: 20261004
+
+sample:
+  # Sample frame fixed at baseline to avoid selecting on post-rollout development:
+  # World Bank income classification for fiscal year 2015 (published July 2014, based on 2013 GNI).
+  income_classification_fy: 2015
+  income_groups: [L, LM, UM]
+
+annual:                      # SDG 1.3.1 and placebo outcomes
+  first_year: 2014
+  last_year: 2024
+  rollout_lag_years: 0       # treated from the rollout year onward
+  event_window: [-5, 5]      # plotted window; all event times are estimated
+  balance_e: 3               # balanced event study (robustness): cohorts observed for e = 0..3
+
+waves:                       # Global Findex
+  years: [2014, 2017, 2021, 2024]
+  rollout_lag_years: 1       # treated at wave w if rollout_year <= w - 1
+  balance_e: 1
+
+baseline:
+  year: 2014                 # covariates and safeguards measured here
+  lookback_years: 4          # use the latest non-missing value in [year - lookback, year]
+
+estimation:
+  control_group: notyettreated
+  base_period: varying       # ATT(g,t) and pre-trend tests; event-study plots and HonestDiD use universal
+  anticipation: 0
+  covariates_main: [log_gdppc_2014, urban_2014, mobile_2014, conflict_2010_2014]
+  covariates_extended: [log_gdppc_2014, urban_2014, mobile_2014, conflict_2010_2014, sp_spending_2014]
+  n_boot: 999
+  alpha: 0.05
+  min_treated: 1
+  min_control: 2
+
+wild_bootstrap:
+  n_boot: 9999
+  weights: webb
+
+outcomes:
+  aggregate: sdg131_total            # H1, primary
+  group_total: transfer_total        # H1, secondary (Findex)
+  groups: [transfer_female, transfer_male, transfer_poor40, transfer_rich60, transfer_rural, transfer_urban]
+  gaps: [gap_sex, gap_income, gap_residence]   # H2
+  placebo: [elec_access, agri_land]             # falsification outcomes
+
+safeguards:                   # H3 moderator
+  components: [wgi_va_2014, wgi_rl_2014, vdem_cspart_2014]
+  dp_law_col: dp_law_year     # converted to "law in force at baseline" and added as a component
+  split: median               # robustness: tercile (top vs bottom third)
+
+design:                       # H4 (exploratory)
+  feature: biometric_auth_mandatory_benefits
+
+multiple_testing:
+  H1: none                    # one primary test (SDG 1.3.1, group aggregation)
+  H2: holm                    # three gaps
+  H3: holm                    # high-minus-low difference for SDG 1.3.1 and Findex total
+  exploratory: bh
+
+robustness:
+  never_treated_controls: true
+  unconditional: true
+  extended_covariates: true
+  alt_lag: true               # annual lag 1; waves lag 0 and 2
+  alt_rollout_date: true      # rollout_year_alt (legal establishment date)
+  interpolate_sdg: true       # SDG 1.3.1 interpolated within each country's observed years
+  pre_covid_window: 2019      # annual outcomes, years <= 2019
+  exclude_donor_financed: true
+  balanced_event_study: true
+  tercile_split: true
+  leave_one_region_out: true
+  comparisons: [sun_abraham, did_m, twfe_static, twfe_event_study, twfe_weights]
+
+honestdid:
+  mbar: [0, 0.5, 1, 1.5, 2]   # relative magnitudes
+  post_average_e: [0, 1, 2, 3]
