@@ -1,7 +1,8 @@
 # Data sources. "api" sources are fetched by `python -m idsp.data.worldbank`.
-# "manual" sources are downloaded by hand and saved in data/raw/manual/ in the tidy schema given
-# here (see docs/data_sources.md for step-by-step instructions). Codes marked VERIFY must be
-# checked against the provider's catalogue before the first real run.
+# "manual" sources are saved in data/raw/manual/ in the tidy schema given here.
+# `python -m idsp.data.download` fetches or converts most of them (urls below; originals kept in
+# data/raw/original/); see docs/data_sources.md. Codes marked VERIFY must be checked against the
+# provider's catalogue before the first real run.
 
 worldbank_api:
   base_url: https://api.worldbank.org/v2
@@ -23,10 +24,21 @@ manual:
     file: income_classification.csv
     schema: [iso3, country, region, income_group]       # FY2015 classification (OGHIST.xlsx)
     provider: World Bank historical income classifications
+    urls:                                               # tried in order; region comes from the API country list
+      - https://datacatalogfiles.worldbank.org/ddh-published/0037712/DR0090754/OGHIST.xlsx
+      - https://databankfiles.worldbank.org/public/ddpext_download/site-content/OGHIST.xlsx
   sdg131:
     file: sdg131.csv
     schema: [iso3, year, sdg131_total]                    # % of population covered by at least one benefit
     provider: ILO World Social Protection Database / ILOSTAT (SDG 1.3.1)   # VERIFY indicator id
+    ilostat_id: SDG_0131_SEX_SOC_RT_A                     # VERIFY
+    sex: SEX_T
+    classif1: SOC_CONTIG_TOTAL                            # VERIFY: population covered by at least one benefit
+    urls:                                                 # tried in order; {id} = ilostat_id
+      - https://rplumber.ilo.org/files/website/bulk/indicator/{id}.csv.gz
+      - https://rplumber.ilo.org/data/indicator/?id={id}&type=code&format=.csv
+      - https://webapps.ilo.org/ilostat-files/WEB_bulk_download/indicator/{id}.csv.gz
+      - https://www.ilo.org/ilostat-files/WEB_bulk_download/indicator/{id}.csv.gz
   sp_spending:
     file: sp_spending.csv
     schema: [iso3, year, sp_spending]                     # public social protection expenditure excl. health, % GDP
@@ -36,10 +48,30 @@ manual:
     schema: [iso3, wave, transfer_total, transfer_female, transfer_male, transfer_poor40,
              transfer_rich60, transfer_rural, transfer_urban]
     provider: Global Findex Database 2025 (received government transfer or pension, % age 15+)  # VERIFY item comparability
+    # No stable download link: save the country-level database by hand in data/raw/original/, run
+    # `python -m idsp.data.download --findex-columns`, then fill the mapping below.
+    # VERIFY (review_notes B2): record the question behind each column, wave by wave, in docs/codebook.md.
+    original_pattern: ["*findex*.xlsx", "*findex*.csv"]
+    sheet: null                # null: the sheet with a country-code header
+    country_col: null          # null: detected ("Country code", "Economy code", ...)
+    year_col: null             # null: detected ("Year")
+    group_col: null            # long layout only (one row per country, year and group)
+    wave_map: {2011: 2011, 2014: 2014, 2017: 2017, 2021: 2021, 2022: 2021, 2024: 2024, 2025: 2024}  # VERIFY
+    series:                    # wide layout: "column label"; long layout: ["column label", "group value"]
+      transfer_total: null
+      transfer_female: null
+      transfer_male: null
+      transfer_poor40: null
+      transfer_rich60: null
+      transfer_rural: null
+      transfer_urban: null
   vdem:
     file: vdem.csv
     schema: [iso3, year, v2x_cspart, v2csreprss]
     provider: V-Dem country-year dataset (country_text_id = iso3)
+    urls:                                                 # Country-Year V-Dem Core, newest first
+      - https://www.v-dem.net/media/datasets/V-Dem-CY-Core-v16_csv.zip
+      - https://www.v-dem.net/media/datasets/V-Dem-CY-Core-v15_csv.zip
   id4d:
     file: id4d.csv
     schema: [iso3, year, id_ownership]                    # optional first-stage check

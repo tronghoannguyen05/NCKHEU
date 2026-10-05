@@ -2,6 +2,35 @@
 
 Tất cả nguồn đều công khai hoặc miễn phí khi đăng ký. Giữ bản tải gốc kèm ngày tải trong `data/raw/original/`, rồi chuyển sang tệp gọn theo đúng các cột ghi trong `config/sources.yaml`, lưu vào `data/raw/manual/`. Những chỗ ghi **VERIFY** phải được kiểm tra trên trang của nhà cung cấp trước lần chạy thật đầu tiên. Mã trong repo chưa từng chạy trên dữ liệu thật, vì môi trường phát triển không truy cập được các trang này.
 
+## 0. Tải bằng một lệnh
+
+Lệnh `python -m idsp.data.download` làm phần lớn các bước ở mục 1 và 2. Nó tải bản gốc vào `data/raw/original/`, ghi ngày tải và mã SHA-256 vào `data/raw/original/MANIFEST.csv`, rồi chuyển sang tệp gọn trong `data/raw/manual/`.
+
+```
+python -m idsp.data.download                    # biến kiểm soát: WDI/WGI, OGHIST, V-Dem
+python -m idsp.data.download --outcomes         # thêm dữ liệu kết quả: SDG 1.3.1, Findex
+python -m idsp.data.download --only vdem        # chỉ một nguồn
+python -m idsp.data.download --refresh          # tải lại dù đã có tệp
+python -m idsp.data.download --findex-columns   # liệt kê cột của tệp Findex
+```
+
+| Nguồn | Lệnh làm gì |
+|---|---|
+| WDI, WGI | Tải qua World Bank API (như `python -m idsp.data.worldbank`). Bỏ qua chỉ tiêu đã có tệp |
+| OGHIST | Tải `OGHIST.xlsx`, đọc cột FY2015 (lấy từ `config/settings.yaml`), giữ nguyên ký hiệu. Cột `region` lấy từ danh sách quốc gia của World Bank API (phân loại vùng hiện hành) |
+| V-Dem | Tải bản Country-Year V-Dem Core (thử v16, rồi v15), giữ từ năm 2005 |
+| SDG 1.3.1 | Chỉ chạy với `--outcomes`. Tải tệp bulk ILOSTAT `SDG_0131_SEX_SOC_RT_A`, lọc `SEX_T` và `SOC_CONTIG_TOTAL`. Giữ thêm cột nguồn và trạng thái quan sát (B1). Dừng lại nếu một nước–năm có nhiều dòng |
+| Findex | Chỉ chạy với `--outcomes`. Không có đường tải cố định, nên phải tải tay (mục 2). Lệnh chuyển tệp theo bảng ánh xạ cột trong `config/sources.yaml` |
+| Chi BTXH, ID4D | Không tải tự động. Lệnh in hướng dẫn |
+
+Mấy điểm cần biết:
+
+- **Dữ liệu kết quả cần cờ `--outcomes`.** Nếu chưa có tag `coding-freeze`, lệnh in cảnh báo về quy tắc 3 trong `CLAUDE.md` và mục D1 trong `review_notes.md`. Lệnh không in giá trị kết quả, chỉ in số dòng, số nước và khoảng năm.
+- **Tệp tải tay được dùng thay cho bản tải.** Lưu tệp vào `data/raw/original/`, giữ tên gốc (`OGHIST*.xlsx`, `V-Dem-CY*.zip`, `SDG_0131_SEX_SOC_RT_A*.csv.gz`, tên có chữ `findex`). Lệnh sẽ dùng tệp đó và ghi ngày sửa tệp vào `MANIFEST.csv`.
+- **URL nằm trong `config/sources.yaml`.** Nếu nhà cung cấp đổi đường dẫn, sửa ở đó, không cần sửa mã.
+- **Findex cần hai bước.** Lưu tệp cơ sở dữ liệu cấp quốc gia vào `data/raw/original/`. Chạy `--findex-columns` để xem tên cột, cột năm và cột nhóm (nếu tệp ở dạng dài). Điền `manual.findex.series` trong `config/sources.yaml`, rồi ghi câu hỏi tương ứng của từng đợt vào `docs/codebook.md` (B2). Nếu giá trị là tỷ lệ 0–1, lệnh tự đổi sang phần trăm. `wave_map` gán năm khảo sát vào đợt (2022 vào đợt 2021, 2025 vào đợt 2024). Đây là chỗ **VERIFY**.
+- Mã nguồn tải và đọc tệp mới chỉ được kiểm tra với tệp giả lập (`tests/test_download.py`). Lần chạy thật đầu tiên phải đọc kỹ thông báo của từng nguồn.
+
 ## 1. Tải tự động: World Bank API (WDI, WGI)
 
 ```

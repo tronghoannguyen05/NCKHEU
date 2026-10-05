@@ -17,7 +17,8 @@
 
 ## Trạng thái (cập nhật khi thay đổi)
 
-- [x] Repo, bộ ước lượng, dữ liệu giả lập, pipeline, kiểm thử (24 bài, đều qua).
+- [x] Repo, bộ ước lượng, dữ liệu giả lập, pipeline, kiểm thử (37 bài, đều qua).
+- [x] Lệnh tải dữ liệu `python -m idsp.data.download` (mới kiểm tra với tệp giả lập).
 - [x] Kế hoạch phân tích bản chốt (5/10/2026).
 - [ ] Đối chiếu ngưỡng ý nghĩa thực tiễn 2 điểm phần trăm với số liệu ILO (`analysis_plan.md` mục 8).
 - [ ] Đăng ký OSF (khuyến nghị) trước khi ghép kết quả với mốc triển khai.
@@ -58,7 +59,7 @@
 | `config/settings.yaml`, `config/sources.yaml` | Tham số phân tích; nguồn dữ liệu và mã chỉ tiêu |
 | `data/rollout/` | Dữ liệu mã hóa thủ công (được commit) |
 | `src/idsp/estimators/` | Callaway–Sant'Anna, Sun–Abraham, DID_M, TWFE, chẩn đoán, wild bootstrap |
-| `src/idsp/data/` | Tải World Bank API, dựng panel |
+| `src/idsp/data/` | Tải dữ liệu (`download.py`, `worldbank.py`), dựng panel |
 | `src/idsp/pipeline.py` | Chạy toàn bộ phân tích |
 | `r/honestdid.R` | Rambachan–Roth |
 | `tests/` | Kiểm thử, gồm đối chiếu với `csdid` và `drdid` |
@@ -70,7 +71,8 @@ python -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev,crosscheck]"
 pytest                                   # kiểm thử
 python -m idsp.pipeline --synthetic      # chạy thử trên dữ liệu giả lập
-python -m idsp.data.worldbank            # tải WDI và WGI
+python -m idsp.data.download             # tải biến kiểm soát (WDI/WGI, OGHIST, V-Dem)
+python -m idsp.data.download --outcomes  # thêm SDG 1.3.1 và Findex (sau coding-freeze)
 python -m idsp.data.panel                # dựng panel (cần các tệp thủ công)
 python -m idsp.pipeline                  # chạy trên dữ liệu thật
 Rscript r/honestdid.R                    # Rambachan–Roth

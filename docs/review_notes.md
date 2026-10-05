@@ -35,3 +35,4 @@ Xếp theo mức ưu tiên. Đánh dấu [x] khi đã xử lý và ghi vị trí
 - [ ] E1. Kiểm tra các mã **VERIFY** trong `config/sources.yaml` và `docs/codebook.md`.
 - [ ] E2. Chạy `Rscript r/honestdid.R` trên kết quả giả lập. Script này chưa từng chạy, vì môi trường phát triển không có R.
 - [ ] E3. Chạy `python -m idsp.data.worldbank`. Hàm tải chỉ mới được kiểm tra với phản hồi giả lập.
+- [ ] E4. Chạy `python -m idsp.data.download`. Các URL trong `config/sources.yaml` và bộ đọc OGHIST, V-Dem, ILOSTAT, Findex chỉ mới được kiểm tra với tệp giả lập. Kiểm tra mã `classif1` của SDG 1.3.1 và bảng ánh xạ cột Findex.

@@ -36,8 +36,8 @@ python -m idsp.pipeline --synthetic --n-boot 199
 Real data:
 
 ```bash
-python -m idsp.data.worldbank      # WDI and WGI through the World Bank API
-# download the manual sources into data/raw/manual/ (docs/data_sources.md)
+python -m idsp.data.download       # covariates: WDI/WGI, income groups, V-Dem (docs/data_sources.md)
+python -m idsp.data.download --outcomes   # outcomes too (SDG 1.3.1; Findex from a file saved by hand)
 python -m idsp.coding validate     # check the hand-coded rollout dataset
 python -m idsp.data.panel          # build data/processed/
 python -m idsp.pipeline            # estimates, tables, figures
